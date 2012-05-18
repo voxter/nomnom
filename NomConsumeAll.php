@@ -47,8 +47,8 @@ function nomnom( $envelope, $queue ) {
 	if( $pd != false ) {
 		$CDB->send("POST","/vqr/",json_encode($pd));
 		echo "Sent to couch vqr\n";
-
-		$msg = "MOSLQ=<b>{$pd['QualityEst']['MOSLQ']}</b> MOSCQ=<b>{$pd['QualityEst']['MOSCQ']}</b> CallID=<b>{$pd['CallID']}</b> From=<b>{$pd['From']['sip_address']}</b> To=<b>{$pd['To']['sip_address']}</b> <a href='http://localhost:5984/vqr/_design/generic/_view/by_callid?key=%22{$pd['CallID']}%22'>vqr link</a>";	
+		$duration = strtotime($pd['STOP']) - strtotime($pd['START']);
+		$msg = "Duration: <b>$duration</b> MOSLQ=<b>{$pd['QualityEst']['MOSLQ']}</b> MOSCQ=<b>{$pd['QualityEst']['MOSCQ']}</b> CallID=<b>{$pd['CallID']}</b> From=<b>{$pd['From']['sip_address']}</b> To=<b>{$pd['To']['sip_address']}</b> <a href='http://localhost:5984/vqr/_design/generic/_view/by_callid?key=%22{$pd['CallID']}%22'>vqr link</a>";	
 		if( $pd['QualityEst']['MOSLQ'] < 4.4 || $pd['QualityEst']['MOSCQ'] < 4.4 ) {
 			Hippy::add("Alert ".$msg);
 			Hippy::go();

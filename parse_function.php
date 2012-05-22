@@ -82,7 +82,7 @@ function parse_sip_vqr($row) {
 			$aout['From']['sip_address'] = $to_id_parsed[0];
 			$aout['To']['sip_address'] = $to_parsed[0];
 		}
-
+		
 		$tmp = explode("@", $to_parsed[0] );
 		$aout['Realm'] = $tmp[1];
 
@@ -129,6 +129,17 @@ function parse_sip_vqr($row) {
 		$aout['Delay'] = explodex($row['Delay']);
 		//$aout['SessionDesc'] = $row['SessionDesc'];
          
+
+
+		//This is really really lazy
+		if( !stristr($aout['From']['sip_address'],$aout['From']['username']) ) {
+			$tmp = 	$aout['From']['sip_address'];
+			$aout['From']['sip_address'] = $aout['To']['sip_address'];
+			$aout['To']['sip_address'] = $tmp;	
+		}
+
+
+
 		return($aout);
 	} 
 

@@ -6,6 +6,7 @@ global $CDB;
 require_once("CouchDB.php");
 require_once("Hippy.php");
 require_once("parse_function.php");
+require_once("mtr_function.php");
 
 $CBOPTS['host'] = "127.0.0.1";
 $CBOPTS['port'] = 5984;
@@ -14,8 +15,7 @@ $EXCHANGE_NAME = "vqmonitor";
 
 
 $CDB = new CouchDB($CBOPTS); // See if we can make a connection
-$CDB->send("PUT","/vqmon");
-$CDB->send("PUT","/vqr");
+$CDB->send("PUT","/vqmtr");
 
 
 function nomnom( $envelope, $queue ) {
@@ -40,19 +40,31 @@ function nomnom( $envelope, $queue ) {
 	}
 
 	echo "Got {$cdata['sip_header']}\n";
-	$CDB->send("POST","/vqmon/",json_encode($cdata));
-	echo "Sent to couch vqmon\n";
 
 	$pd = parse_sip_vqr($cdata);	
 	if( $pd != false ) {
-		$CDB->send("POST","/vqr/",json_encode($pd));
-		echo "Sent to couch vqr\n";
+	
+
+
 		$duration = strtotime($pd['STOP']) - strtotime($pd['START']);
 		$msg = "Duration: <b>$duration</b> MOSLQ=<b>{$pd['QualityEst']['MOSLQ']}</b> MOSCQ=<b>{$pd['QualityEst']['MOSCQ']}</b> CallID=<b>{$pd['CallID']}</b> From=<b>{$pd['From']['sip_address']}</b> To=<b>{$pd['To']['sip_address']}</b> <a href='http://localhost:5984/vqr/_design/generic/_view/by_callid?key=%22{$pd['CallID']}%22'>vqr link</a>";	
-		//if( $pd['QualityEst']['MOSLQ'] < 4.3 || $pd['QualityEst']['MOSCQ'] < 4.4 ) {
-		if( $pd['QualityEst']['MOSLQ'] < 4.3 && $duration > 10 ) {
-			Hippy::add("Alert ".$msg);
-			Hippy::go();
+		//if( $pd['QualityEst']['MOSLQ'] < 4.4 && $duration > 10 ) {
+		if( 1 ) {
+			
+			//Hippy::add("Alert ".$msg);
+			//Hippy::go();
+		
+			$remote_addr = null;
+			if( isset($cdata['RemoteAddr']) ) {
+				$tmp = sscanf($cdata['RemoteAddr'],"IP=%s PORT=%s SSRC=%s");
+				$remote_addr = $tmp[0];
+			}
+			
+			$mtr = get_mtr($remote_addr);
+			$mtr['id'] = $cdata['CallID'];
+
+			$CDB->send("PUT","/vqmtr/{$cdata['CallID']}",json_encode($mtr));
+			echo strip_tags($msg)."\n";
 		} else {
 			echo strip_tags($msg)."\n";
 		}
@@ -73,9 +85,9 @@ $cnn = new AMQPConnection();
 
 $cnn->setHost('127.0.0.1');
 
-Hippy::speak('NomNom Consumer Started '.basename(__FILE__));
+Hippy::speak('NomMtr Consumer Started '.basename(__FILE__));
 if ($cnn->connect()) {
-	echo "Established a connection to AMQP\n";
+	echo "Established a connection to AMQP (MTR)\n";
 	Hippy::add("Connected to AMQP $EXCHANGE_NAME exchange.");
 
 	$ch = new AMQPChannel($cnn);

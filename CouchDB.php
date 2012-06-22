@@ -17,7 +17,7 @@ class CouchDB {
 		if( $this->debug ) {
 			echo $logthis."\n";
 		} else {
-			file_put_contents("/tmp/vortex.log",date("Y-m-d H:i:s")." - ".$logthis."\n",FILE_APPEND);
+			file_put_contents("/tmp/testing.log",date("Y-m-d H:i:s")." - ".$logthis."\n",FILE_APPEND);
 		}
 	}
 

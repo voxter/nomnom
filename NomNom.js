@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/local/bin/node
 
 var txtblk = String.fromCharCode(0x1B)+'[0;30m';
 var txtred = String.fromCharCode(0x1B)+'[0;31m';
@@ -48,7 +48,7 @@ var net = require('net');
 var amqp = require('amqp');
 
 var version = '1.0';
-var listen_ip = '205.204.65.219';
+var listen_ip = '0.0.0.0';
 var listen_tcp_port = 5060;
 var socket_timeout_in_ms = 7000;
 
